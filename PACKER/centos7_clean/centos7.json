@@ -1,0 +1,84 @@
+{
+  "provisioners": [
+	{
+	  "type": "shell",
+      "start_retry_timeout": "8m",
+	  "inline": [
+        "sleep 30",
+        "sudo yum -y install epel-release",
+		"sudo yum -y update",
+		"sudo reboot",
+		"echo 'PO_REBOOOOOOOOT_1'",
+		"sudo yum -y update",
+		"sudo yum -y install dkms",
+		"sudo reboot",
+		"echo 'PO_REBOOOOOOOOT_2'"
+      ]
+	  
+	},
+	{
+      "type": "shell",
+	  "execute_command": "sudo {{.Vars}} sh {{.Path}}",
+      "pause_before": "60s",
+	  "scripts": [
+        "scripts/vagrant.sh",
+        "scripts/vmtools.sh",
+        "scripts/cleanup.sh",
+        "scripts/zerodisk.sh"
+      ]
+	  
+    }
+  ],
+
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "boot_command": [
+        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>"
+      ],
+      "boot_wait": "10s",
+      "disk_size": 40096,
+      "guest_os_type": "RedHat_64",
+      "headless": false,
+      "http_directory": "http",
+      "iso_urls": [
+        "CentOS-7-x86_64-DVD-1503-01.iso",
+        "D:/ISO/CentOS-7-x86_64-DVD-1503-01.iso"
+      ],
+      "iso_checksum_type": "md5",
+      "iso_checksum": "99e450fb1b22d2e528757653fcbf5fdc",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_port": 22,
+      "ssh_wait_timeout": "10000s",
+      "shutdown_command": "echo 'vagrant'|sudo -S /sbin/halt -h -p",
+      "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+      "virtualbox_version_file": ".vbox_version",
+      "vm_name": "packer-centos-7-x86_64",
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "2048"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "2"
+        ]
+      ]
+    }
+  ],
+  "post-processors": [
+     {
+      "type": "compress",
+      "keep_input_artifact": true
+    },
+	{
+      "output": "builds/{{.Provider}}-centos7.box",
+      "type": "vagrant"
+    }
+  ]
+}
